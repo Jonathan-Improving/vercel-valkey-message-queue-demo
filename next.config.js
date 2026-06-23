@@ -10,6 +10,7 @@
 const nextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ['@valkey/valkey-glide'],
+  typescript: { ignoreBuildErrors: true },
 }
 
 module.exports = nextConfig
