@@ -62,15 +62,18 @@ async function ensureConsumerGroup(client: GlideClient): Promise<void> {
 function handleError(error: unknown, defaultMessage: string) {
   console.error('API Error:', error)
 
-  const message = error instanceof Error ? error.message : ''
+  const message = error instanceof Error ? error.message.toLowerCase() : ''
 
   // Connection-related errors get a helpful explanation
   if (
-    message.includes('ECONNREFUSED') ||
-    message.includes('ETIMEDOUT') ||
-    message.includes('ENOTFOUND') ||
+    message.includes('econnrefused') ||
+    message.includes('etimedout') ||
+    message.includes('enotfound') ||
     message.includes('connection') ||
-    message.includes('timeout')
+    message.includes('timeout') ||
+    message.includes('disconnect') ||
+    message.includes('closed') ||
+    message.includes('unreachable')
   ) {
     return NextResponse.json(
       { error: `${defaultMessage}: Unable to connect to the Valkey server. Ensure VALKEY_ENDPOINT is configured and the server is reachable.` },
@@ -78,7 +81,11 @@ function handleError(error: unknown, defaultMessage: string) {
     )
   }
 
-  return NextResponse.json({ error: defaultMessage }, { status: 500 })
+  // Fallback — still helpful since most 500s in this demo are connection issues
+  return NextResponse.json(
+    { error: `${defaultMessage}: An unexpected error occurred. Check that the Valkey server is running and accessible.` },
+    { status: 500 }
+  )
 }
 
 /**
